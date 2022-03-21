@@ -1,0 +1,113 @@
+{% extends "request/base.html" %}
+
+{% block contentacc %}
+<div id="request" class="w3-center">
+    <p></p>
+    <div class="w3-center">
+        <h4>Заполните форму</h4>
+    </div>
+
+    <div class="w3-card w3-container" style="margin: 15%; margin-top: 0%">
+        <form>
+            <div class="w3-section" style="text-align: left;">
+                <label>Тип клиента:</label>
+                <select class="w3-input change" id="type-client" name="type-client" disabled>
+                    <option value="new-client">Новый клиент</option>
+<!--                    <option></option>-->
+<!--                    <option value="new-client">Новый клиент</option>-->
+                    <option value="old-client">Старый клиент</option>
+                </select>
+            </div>
+            <div class="w3-section" style="text-align: left;">
+                <label>Тип просрочки:</label>
+                <select class="w3-input change" id="type-delay" name="type-delay" disabled>
+                    <option value="30">30+</option>
+                    <option value="1">1+</option>
+<!--                    <option value="30">30+</option>-->
+                    <option value="90">90+</option>
+                </select>
+            </div>
+            <div class="w3-section" style="text-align: left;">
+                <h7 class="response_data"></h7>
+            </div>
+            <div id="respp">
+                <button class="w3-btn w3-blue w3-black" id="btn_get_params" type="button">Далее</button>
+            </div>
+            <div class="w3-section response_request" style="text-align: left;"></div>
+
+            <div class="w3-margin-top"></div>
+        </form>
+    </div>
+</div>
+<br>
+
+<script>
+$(function() {
+    $('#btn_get_params').click(function() {
+        var body = {
+            "type-delay": $('#type-delay').val(),
+            "type-client": $('#type-client').val(),
+        };
+        $(".change").each(function(index, val) {
+            console.log($(val).val());
+            var id = $(val).attr("id");
+            body[id] = $(val).val();
+            console.log(id);
+        });
+        $.ajax({
+            url: '/api/v1/get_params',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            data: JSON.stringify(body),
+            type: 'POST',
+            success: function(json_date) {
+                console.log(json_date);
+                $('.response_data').append(json_date["data"]);
+                $('#type-client').prop("disabled", true);
+                $('#btn_get_params').remove();
+                $('#respp').append('<button class="w3-btn w3-blue w3-black" id="btn_request" type="button">Рассчитать</button>');
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    });
+});
+</script>
+
+<script>
+$(function() {
+    $('#respp').on('click', '#btn_request', function() {
+        var body = {
+        };
+        $(".change").each(function(index, val) {
+            console.log($(val).val());
+            var id = $(val).attr("id");
+            body[id] = [$(val).val()];
+            console.log(id);
+        });
+        $.ajax({
+            url: '/api/v1/request',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            data: JSON.stringify(body),
+            type: 'POST',
+            success: function(json_date) {
+                console.log(json_date);
+                $(".response_request").html("<p>Вероятность дефолта: " + json_date.var + "%</p>");
+            },
+            error: function(error) {
+                var msg = '';
+                msg = 'Ошибка. Проверьте введенные данные';
+                console.log(msg);
+                $(".response_request").html("<p style='color: red;'>" + msg + "</p>");
+            }
+        });
+    });
+});
+</script>
+
+
+{% endblock contentacc %}
